@@ -18,13 +18,13 @@ LibTieC::LibTieC()
 
 bool LibTieC::folderPack(std::string folder_path, std::string tie_file_path)
 {
-	FILE* ofp = fopen(tie_file_path.c_str(), "wb+");
+    FILE* ofp = fopen(tie_file_path.c_str(), "wb+");
     if (ofp == NULL)
         return false;
     // write magic
-	fwrite("tief", 1, 4, ofp);
+    fwrite("tief", 1, 4, ofp);
     uint64_t ret = folderPack(folder_path, ofp, 0);
-	fclose(ofp);
+    fclose(ofp);
     return ret >= 4;
 }
 
@@ -55,17 +55,17 @@ uint64_t LibTieC::folderPack(std::string folder_path, FILE* ofp, uint64_t addr_p
         // update for younger brother, now addr_pre is my address
         addr_pre = ftell(ofp);
         // wirite meta to file
-		fwrite((char *)&file_meta, 1, sizeof(file_meta_t), ofp);
+        fwrite((char *)&file_meta, 1, sizeof(file_meta_t), ofp);
         // wiite name after meta
-		fwrite(file_info.fileName().toLatin1().data(), 1, file_meta.name_len, ofp);
+        fwrite(file_info.fileName().toLatin1().data(), 1, file_meta.name_len, ofp);
         // update elder brother's addr_next
         if(file_meta.addr_pre != 0) {
             uint64_t restore_addr = ftell(ofp);
             // jump to elder brother's addr_next and update
-			fseek(ofp, file_meta.addr_pre + sizeof(uint64_t)*2, SEEK_SET);
-			fwrite((char *)&addr_pre, 1, sizeof(uint64_t), ofp);
+            fseek(ofp, file_meta.addr_pre + sizeof(uint64_t)*2, SEEK_SET);
+            fwrite((char *)&addr_pre, 1, sizeof(uint64_t), ofp);
             // restore file pointer
-			fseek(ofp, restore_addr, SEEK_SET);
+            fseek(ofp, restore_addr, SEEK_SET);
         }
 
         if(file_info.isDir()) {
@@ -78,10 +78,10 @@ uint64_t LibTieC::folderPack(std::string folder_path, FILE* ofp, uint64_t addr_p
             if(address >= 4) {
                 uint64_t restore_addr = ftell(ofp);
                 // jump to my addr_child and update
-				fseek(ofp, addr_pre + sizeof(uint64_t)*3, SEEK_SET);
-				fwrite((char *)&address, 1, sizeof(uint64_t), ofp);
+                fseek(ofp, addr_pre + sizeof(uint64_t)*3, SEEK_SET);
+                fwrite((char *)&address, 1, sizeof(uint64_t), ofp);
                 // restore file pointer
-				fseek(ofp, restore_addr, SEEK_SET);
+                fseek(ofp, restore_addr, SEEK_SET);
             }
         } else {
             // write file_size and file_content close to file_meta
@@ -99,24 +99,24 @@ bool LibTieC::wirteFileContent(FILE* ofp, std::string fpath)
     uint64_t total_size = 0;
     uint64_t start_offset = ftell(ofp);
     
-	FILE* ifp = fopen(fpath.c_str(), "rb");
-	if (ofp == NULL)
+    FILE* ifp = fopen(fpath.c_str(), "rb");
+    if (ofp == NULL)
         return false;
     // place for size, fill it later
-	fseek(ofp, start_offset + sizeof(uint64_t), SEEK_SET);
+    fseek(ofp, start_offset + sizeof(uint64_t), SEEK_SET);
     // copy file
     while(true) {
         int16_t size = fread(buf, 1, 4096, ifp);
         if(size < 1)
             break;
-		fwrite(buf, 1, size, ofp);
+        fwrite(buf, 1, size, ofp);
         total_size += size;
     }
-	fclose(ifp);
+    fclose(ifp);
     // write size
-	fseek(ofp, start_offset, SEEK_SET);
-	fwrite((char*)&total_size, 1, sizeof(uint64_t), ofp);
+    fseek(ofp, start_offset, SEEK_SET);
+    fwrite((char*)&total_size, 1, sizeof(uint64_t), ofp);
     // back to end
-	fseek(ofp, 0, SEEK_END);
+    fseek(ofp, 0, SEEK_END);
     return true;
 }
