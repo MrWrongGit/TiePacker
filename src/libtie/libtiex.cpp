@@ -19,20 +19,20 @@ bool LibTieX::folderUnpack(std::string tie_file_path, std::string folder_path)
 {
     const char *magic = "tief";
     char buf[4];
-	FILE* ifp = fopen(tie_file_path.c_str(), "rb");
-	if(ifp == NULL)
-        return false;
+    FILE* ifp = fopen(tie_file_path.c_str(), "rb");
+    if(ifp == NULL)
+    return false;
     // magic check
-	fread(buf, 1, 4, ifp);
+    fread(buf, 1, 4, ifp);
     for(uint8_t i=0; i<4 ;i++) {
         if(buf[i] != magic[i]) {
-			fclose(ifp);
+            fclose(ifp);
             return false;
         }
     }
     // start unpack
     bool ret = folderUnpack(ifp, folder_path, 4);
-	fclose(ifp);
+    fclose(ifp);
     return ret;
 }
 
@@ -61,7 +61,7 @@ bool LibTieX::folderUnpack(FILE* ifp, std::string root_path, uint64_t start_addr
             return false;
         name_buf[rsize] = '\0';
 		
-		QString file_path = QString::fromLatin1(name_buf, file_meta_p->name_len);
+        QString file_path = QString::fromLatin1(name_buf, file_meta_p->name_len);
         QString meta_path = QDir::cleanPath(QString(root_path.c_str()) + QDir::separator() + file_path);
         if(file_meta_p->file_type == F_TYPE_DIR) {
             // create folder
@@ -89,12 +89,12 @@ bool LibTieX::fileRecovery(FILE* ifp, std::string file_path, uint64_t start_addr
     uint64_t file_size = 0;
     bool ret = true;
     // praper output file
-	FILE* ofp = fopen(file_path.c_str(), "wb+");
+    FILE* ofp = fopen(file_path.c_str(), "wb+");
     if (ofp == NULL)
         return false;
     // get file size
-	fseek(ifp, start_addr, SEEK_SET);
-	rsize = fread((char *)&file_size, 1, sizeof(uint64_t), ifp);
+    fseek(ifp, start_addr, SEEK_SET);
+    rsize = fread((char *)&file_size, 1, sizeof(uint64_t), ifp);
     if(rsize != sizeof(uint64_t)) {
         ret = false;
         goto read_err;
@@ -106,19 +106,19 @@ bool LibTieX::fileRecovery(FILE* ifp, std::string file_path, uint64_t start_addr
         else
             rsize = file_size;
         // read to buf
-		rsize = fread(buf, 1, rsize, ifp);
+        rsize = fread(buf, 1, rsize, ifp);
         if(rsize < 1)
             break;
         // write from buf
-		fwrite(buf, 1, rsize, ofp);
+        fwrite(buf, 1, rsize, ofp);
         file_size -= rsize;
     }
     // make sure
     if(file_size != 0)
         ret = false;
 read_err:
-	fclose(ofp);
-	fseek(ifp, restore_addr, SEEK_SET); // recovery file pointer
+    fclose(ofp);
+    fseek(ifp, restore_addr, SEEK_SET); // recovery file pointer
     return ret;
 }
 
